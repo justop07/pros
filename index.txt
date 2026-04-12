@@ -1,0 +1,16 @@
+curd oprs
+
+
+db.createCollection("teachers")
+
+db.teachers.insertOne( { name :"Soham" , age:20 , subject : "Maths"})
+
+db.teachers.insertMany([ { name :"Soham" , age:20 , subject : "Maths"}, { name :"omkar" , age:21 , subject : "German"} ,  { name :"Ameya" , age:20 , subject : "Nepali"} ])
+
+db.teachers.find()
+
+ db.teachers.updateOne( { _id: ObjectId('69dae531c26d6efcdf3682d2') } , {$set: { name : 'Pratik' , subject : 'meehhh'}})
+
+db.teachers.find()
+
+ db.teachers.deleteOne({name : 'Soham'})
