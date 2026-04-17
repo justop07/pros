@@ -1,0 +1,707 @@
+Predict the fare amount of an Uber ride from the given pickup point to the drop-off
+location using Linear Regression.
+Perform the following:
+1. Pre-process the dataset
+2. Identify outliers
+3. Find correlation between features
+4. Train the Linear Regression model
+5. Evaluate using R2 Score and RMSE.
+
+OR
+
+Build a Linear Regression model to estimate the fare of an Uber trip based on
+trip-related features. Preprocess the data, identify outliers, analyze correlations, and
+evaluate the model performance.
+
+
+
+import pandas as pd
+import numpy as np
+
+# Load dataset
+df = pd.read_csv('/mnt/data/uber.csv')
+
+df.head()from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score, mean_squared_error
+
+# Drop unnecessary columns
+df = df.drop(columns=['Unnamed: 0','key'], errors='ignore')
+
+# Drop missing
+df = df.dropna()
+
+# Remove obvious outliers (fare > 100 or <=0)
+df = df[(df['fare_amount'] > 0) & (df['fare_amount'] < 100)]
+
+# Remove invalid passenger counts
+df = df[(df['passenger_count'] > 0) & (df['passenger_count'] < 7)]
+
+# Distance feature (Haversine simplified)
+def distance(lat1, lon1, lat2, lon2):
+    return np.sqrt((lat1-lat2)**2 + (lon1-lon2)**2)
+
+df['distance'] = distance(df['pickup_latitude'], df['pickup_longitude'],
+                         df['dropoff_latitude'], df['dropoff_longitude'])
+
+# Features and target
+X = df[['distance','passenger_count']]
+y = df['fare_amount']
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train model
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Predictions
+y_pred = model.predict(X_test)
+
+# Evaluation
+r2 = r2_score(y_test, y_pred)
+rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+
+r2, rmse
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+
+Predict the fare amount of an Uber ride from the given pickup point to the drop-off
+location using Random Forest Regression.
+Perform the following:
+1. Pre-process the dataset
+2. Identify outliers
+3. Find correlation between features
+4. Train the Random Forest Regression model
+5. Evaluate using R2 Score and RMSE.
+
+OR
+
+Train a Random Forest Regressor on the Uber fare dataset to estimate trip cost.
+
+Perform preprocessing, outlier handling, and model evaluation.
+
+
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import r2_score, mean_squared_error
+
+df = pd.read_csv('/mnt/data/uber.csv')
+
+df = df.drop(columns=['Unnamed: 0','key'], errors='ignore')
+df = df.dropna()
+
+df = df[(df['fare_amount'] > 0) & (df['fare_amount'] < 100)]
+df = df[(df['passenger_count'] > 0) & (df['passenger_count'] < 7)]
+
+def distance(lat1, lon1, lat2, lon2):
+    return np.sqrt((lat1-lat2)**2 + (lon1-lon2)**2)
+
+df['distance'] = distance(df['pickup_latitude'], df['pickup_longitude'],
+                         df['dropoff_latitude'], df['dropoff_longitude'])
+
+X = df[['distance','passenger_count']]
+y = df['fare_amount']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+rf = RandomForestRegressor(n_estimators=100, random_state=42)
+rf.fit(X_train, y_train)
+
+y_pred = rf.predict(X_test)
+
+r2 = r2_score(y_test, y_pred)
+rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+
+r2, rmse
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+Implement K-Nearest Neighbors for Email Spam Detection
+Classify emails as Spam or Not Spam using K-Nearest Neighbors (KNN).
+Evaluate the model using:
+● Confusion Matrix
+● Accuracy
+● Precision
+● Recall
+
+
+
+import pandas as pd
+
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import Normalizer
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score
+
+# Load dataset
+df = pd.read_csv("spam.csv", encoding='latin-1')
+
+# Keep only required columns
+df = df[['v1','v2']]
+df.columns = ['label','text']
+
+# Convert labels (ham=0, spam=1)
+df['label'] = df['label'].map({'ham':0, 'spam':1})
+
+# Remove missing values
+df.dropna(inplace=True)
+
+# Convert text to numerical (TF-IDF)
+vectorizer = TfidfVectorizer(stop_words='english')
+X = vectorizer.fit_transform(df['text'])
+
+# Normalize data (IMPORTANT for KNN)
+normalizer = Normalizer()
+X = normalizer.fit_transform(X)
+
+y = df['label']
+
+# Split dataset
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42)
+
+# Train KNN model
+model = KNeighborsClassifier(n_neighbors=5)
+model.fit(X_train, y_train)
+
+# Predictions
+y_pred = model.predict(X_test)
+
+# Evaluation
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Precision:", precision_score(y_test, y_pred))
+print("Recall:", recall_score(y_test, y_pred))
+
+
+--------------------------------------------------------------------------------------------------------------
+
+Implement ANN for Bank Customer Churn Prediction
+
+Build an Artificial Neural Network (ANN) model to predict whether a customer will
+leave the bank in the next 6 months using the given customer dataset.
+Evaluate using Confusion Matrix, Accuracy, Precision, Recall.
+
+import pandas as pd
+
+# Load dataset
+data = pd.read_csv("Churn_Modelling.csv")
+
+from sklearn.model_selection import train_test_split
+
+# Drop irrelevant columns
+X = data.drop(["RowNumber", "CustomerId", "Surname", "Exited"], axis=1)
+y = data["Exited"]
+
+# Convert categorical features
+X = pd.get_dummies(X, drop_first=True)
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+from sklearn.preprocessing import StandardScaler
+
+# Feature scaling
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout
+
+# Build ANN model
+model = Sequential([
+    Dense(64, activation='relu', input_shape=(X_train.shape[1],)),
+    Dropout(0.3),
+    Dense(32, activation='relu'),
+    Dropout(0.2),
+    Dense(1, activation='sigmoid')
+])
+
+# Compile model
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+
+# Train model
+model.fit(X_train, y_train, epochs=50, batch_size=32,
+          validation_data=(X_test, y_test), verbose=1)
+
+from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score
+
+# Predictions
+y_pred = (model.predict(X_test) > 0.5).astype("int32")
+
+# Evaluation
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Precision:", precision_score(y_test, y_pred))
+print("Recall:", recall_score(y_test, y_pred))
+
+explain
+Here’s a **clear, detailed explanation of your entire code**, step by step 👇
+
+---
+
+# 🧠 1. Loading the Dataset
+
+* The dataset is read from a CSV file into a DataFrame.
+* Each row represents a bank customer.
+* The target column is **`Exited`**:
+
+  * `0` → customer stays
+  * `1` → customer leaves (churn)
+
+---
+
+# 🧹 2. Feature Selection (Separating X and y)
+
+* Independent variables (**X**) are all columns except:
+
+  * `RowNumber`, `CustomerId`, `Surname` → not useful for prediction
+  * `Exited` → target variable
+* Dependent variable (**y**) is `Exited`
+
+👉 This step prepares input (features) and output (target)
+
+---
+
+# 🔄 3. Encoding Categorical Data
+
+* Some columns like **Gender** and **Geography** are text.
+* Machine learning models need numbers, not text.
+* `get_dummies()` converts categories into binary (0/1) columns.
+
+Example:
+
+* Geography → France, Germany, Spain
+  → becomes:
+
+  * Geography_Germany
+  * Geography_Spain
+
+👉 `drop_first=True` avoids redundancy (dummy variable trap)
+
+---
+
+# ✂️ 4. Train-Test Split
+
+* Data is split into:
+
+  * **Training set (80%)** → model learns from this
+  * **Testing set (20%)** → model is evaluated on this
+* `stratify=y` ensures both sets have similar proportion of churn/non-churn customers
+
+👉 This improves model reliability
+
+---
+
+# ⚖️ 5. Feature Scaling
+
+* Neural networks perform better when features are on similar scale.
+* `StandardScaler` transforms data so:
+
+  * Mean = 0
+  * Standard deviation = 1
+
+👉 Prevents features with large values from dominating
+
+---
+
+# 🧠 6. Building the ANN Model
+
+* A **Sequential model** is created (layer-by-layer network)
+
+### Layers:
+
+1. **Input + Hidden Layer (64 neurons, ReLU)**
+
+   * Takes input features
+   * ReLU introduces non-linearity
+
+2. **Dropout (0.3)**
+
+   * Randomly turns off 30% neurons
+   * Prevents overfitting
+
+3. **Hidden Layer (32 neurons, ReLU)**
+
+   * Learns deeper patterns
+
+4. **Dropout (0.2)**
+
+   * Further reduces overfitting
+
+5. **Output Layer (1 neuron, Sigmoid)**
+
+   * Outputs probability (0–1)
+   * Used for binary classification
+
+---
+
+# ⚙️ 7. Compiling the Model
+
+* **Optimizer = Adam**
+
+  * Adjusts weights efficiently during training
+* **Loss = Binary Crossentropy**
+
+  * Measures error for binary classification
+* **Metric = Accuracy**
+
+  * Tracks performance during training
+
+---
+
+# 🏋️ 8. Training the Model
+
+* Model learns patterns from training data
+* **Epochs = 50**
+
+  * Number of times model sees entire dataset
+* **Batch size = 32**
+
+  * Data processed in chunks
+* **Validation data**
+
+  * Evaluates performance on test set during training
+
+👉 Helps monitor overfitting
+
+---
+
+# 🔮 9. Making Predictions
+
+* Model outputs probabilities (e.g., 0.7, 0.2)
+* Convert to class:
+
+  * > 0.5 → 1 (churn)
+  * ≤ 0.5 → 0 (no churn)
+
+---
+
+# 📊 10. Model Evaluation
+
+### 🔹 Confusion Matrix
+
+* Shows prediction results:
+
+|          | Predicted 0 | Predicted 1 |
+| -------- | ----------- | ----------- |
+| Actual 0 | TN          | FP          |
+| Actual 1 | FN          | TP          |
+
+* TN → correctly predicted no churn
+* TP → correctly predicted churn
+* FP → false alarm
+* FN → missed churn
+
+---
+
+### 🔹 Accuracy
+
+* Overall correctness of model
+* Formula: (TP + TN) / Total
+
+---
+
+### 🔹 Precision
+
+* Out of predicted churn, how many were correct
+* Formula: TP / (TP + FP)
+
+👉 Important when false alarms are costly
+
+---
+
+### 🔹 Recall
+
+* Out of actual churn, how many were detected
+* Formula: TP / (TP + FN)
+
+👉 Important when missing churn is risky
+
+---
+
+# 🔥 Final Understanding
+
+* Data is cleaned and converted into numerical form
+* ANN learns complex patterns in customer behavior
+* Dropout prevents overfitting
+* Model predicts whether a customer will leave
+* Performance is evaluated using multiple metrics
+
+---
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+Implement Gradient Descent Algorithm to find the local minima of a function.
+For example, find the local minima of the function y= (x + 3)2 starting from the
+point x = 2
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Function
+def f(x):
+    return (x + 3)**2
+
+# Derivative
+def grad(x):
+    return 2 * (x + 3)
+
+# Initial value
+x = 2
+
+# Learning rate
+alpha = 0.1
+
+# Store values for plotting
+x_values = [x]
+y_values = [f(x)]
+
+# Gradient Descent
+for i in range(20):
+    x = x - alpha * grad(x)
+    x_values.append(x)
+    y_values.append(f(x))
+
+# Create smooth curve for function
+x_range = np.linspace(-6, 4, 100)
+y_range = f(x_range)
+
+# Plot function
+plt.plot(x_range, y_range)
+
+# Plot gradient descent steps
+plt.scatter(x_values, y_values)
+
+# Labels
+plt.title("Gradient Descent on y = (x + 3)^2")
+plt.xlabel("x")
+plt.ylabel("y")
+
+plt.show()
+
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+
+
+Implement K-Nearest Neighbors algorithm on diabetes.csv dataset. Compute
+confusion matrix, accuracy, error rate, precision and recall on the given dataset.
+
+
+import pandas as pd
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score
+
+# Load dataset
+df = pd.read_csv("diabetes.csv")
+
+# Features and target
+X = df.drop("Outcome", axis=1)
+y = df["Outcome"]
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Feature scaling (IMPORTANT for KNN)
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Train KNN model
+model = KNeighborsClassifier(n_neighbors=5)
+model.fit(X_train, y_train)
+
+# Predictions
+y_pred = model.predict(X_test)
+
+# Evaluation
+cm = confusion_matrix(y_test, y_pred)
+accuracy = accuracy_score(y_test, y_pred)
+error_rate = 1 - accuracy
+precision = precision_score(y_test, y_pred)
+recall = recall_score(y_test, y_pred)
+
+# Output
+print("Confusion Matrix:\n", cm)
+print("Accuracy:", accuracy)
+print("Error Rate:", error_rate)
+print("Precision:", precision)
+print("Recall:", recall)
+
+
+
+---------------------------------------------------------------------------------------------------------------
+
+
+
+Implement K-Means clustering on sales data (sample.csv dataset). Determine the
+
+optimal number of clusters using the elbow method.
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+
+# Load dataset
+df = pd.read_csv("sample.csv")
+
+# Select numerical features (adjust based on dataset)
+X = df.select_dtypes(include=['int64','float64'])
+
+# Feature scaling (IMPORTANT)
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Elbow Method
+wcss = []   # Within Cluster Sum of Squares
+
+for k in range(1, 11):
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(X_scaled)
+    wcss.append(kmeans.inertia_)
+
+# Plot Elbow Graph
+plt.plot(range(1, 11), wcss, marker='o')
+plt.title("Elbow Method")
+plt.xlabel("Number of Clusters (K)")
+plt.ylabel("WCSS")
+plt.show()
+
+# Train final model (choose optimal K from graph, e.g., 3)
+kmeans = KMeans(n_clusters=3, random_state=42)
+y_kmeans = kmeans.fit_predict(X_scaled)
+
+# Add cluster labels to dataset
+df['Cluster'] = y_kmeans
+
+# Show clustered data
+print(df.head())
+
+
+--------------------------------------------------------------------------------------------------------------------
+
+
+Build a machine learning model that predicts the type of people who survived
+the Titanic shipwreck using passenger data.
+
+OR
+
+Train a machine learning classifier on the Titanic dataset to predict passenger
+survival and evaluate the results.
+
+
+
+import pandas as pd
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score
+from sklearn.ensemble import RandomForestClassifier
+
+# Load dataset
+df = pd.read_csv("titanic.csv")
+
+# Drop unnecessary columns
+df.drop(['PassengerId','Name','Ticket','Cabin'], axis=1, inplace=True)
+
+# Handle missing values
+df['Age'].fillna(df['Age'].median(), inplace=True)
+df['Embarked'].fillna(df['Embarked'].mode()[0], inplace=True)
+
+# Encode categorical features
+le = LabelEncoder()
+df['Sex'] = le.fit_transform(df['Sex'])
+df['Embarked'] = le.fit_transform(df['Embarked'])
+
+# Features and target
+X = df.drop('Survived', axis=1)
+y = df['Survived']
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Train model (Random Forest)
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# Predictions
+y_pred = model.predict(X_test)
+
+# Evaluation
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Precision:", precision_score(y_test, y_pred))
+print("Recall:", recall_score(y_test, y_pred))
+
+
+-----------------------------------------------------------------------------------------------------------------
+
+Implement the Gradient Descent algorithm to find the local minimum of the
+function y=(x+5)2 starting from x = 2.
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Function
+def f(x):
+    return (x + 5)**2
+
+# Derivative
+def grad(x):
+    return 2 * (x + 5)
+
+# 🔴 STARTING POINT (given in question)
+x = 2  
+
+# Learning rate
+alpha = 0.1
+
+# Store values for graph
+x_vals = [x]
+y_vals = [f(x)]
+
+# Gradient Descent iterations
+for i in range(20):
+    x = x - alpha * grad(x)
+    x_vals.append(x)
+    y_vals.append(f(x))
+    print(f"Iteration {i+1}: x = {x}")
+
+print("\nFinal minimum approx at x =", x)
+
+# Plot
+x_range = np.linspace(-10, 5, 100)
+y_range = f(x_range)
+
+plt.plot(x_range, y_range)
+plt.scatter(x_vals, y_vals)
+
+plt.title("Gradient Descent starting from x = 2")
+plt.xlabel("x")
+plt.ylabel("y")
+
+plt.show()
